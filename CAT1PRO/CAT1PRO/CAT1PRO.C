@@ -21,8 +21,8 @@
 
 #define OPENP       PORTBbits.PB2
 #define OPENS       PORTBbits.PB1
-#define CLOSEP       PORTBbits.PB0
-#define CLOSES       PORTBbits.PB0
+#define CLOSEP      PORTBbits.PB0
+#define CLOSES      PORTAbits.PA0   // ✓ 修正：电机反转控制引脚（PA0）
 
 #define DATA_TRANS   PORTAbits.PA4
 
@@ -54,6 +54,36 @@ unchar    mmm=0;
 const  	char*   abc="ABCD\r\n";
 //int last_toggle_time=0;
 
+//***********************环形缓冲区配置****************************
+#define RING_BUF_SIZE   32      // 环形缓冲区大小（2的幂次，便于优化）
+
+// 环形缓冲区相关变量
+volatile unsigned char ring_buf[RING_BUF_SIZE];  // 环形缓冲区
+volatile unsigned char head = 0;                 // 写指针（中断中更新）
+volatile unsigned char tail = 0;                 // 读指针（主循环中更新）
+
+// 消息缓冲区（用于存储一帧完整数据）
+unsigned char msg_buffer[20];
+
+// CRC调试变量（全局变量，方便调试查看）
+volatile unchar g_cal_crc = 0;      // 计算得到的CRC值
+volatile unchar g_rx_crc = 0;       // 接收到的CRC值
+volatile unchar g_crc_match = 0;    // CRC匹配标志（1=匹配，0=不匹配）
+volatile unchar g_frame_len = 0;    // 当前帧长度
+volatile unchar g_frame_count = 0;  // 已接收帧计数器
+
+//***********************状态机定义****************************
+typedef enum {
+    STATE_WAIT_HEAD = 0,    // 等待帧头 0xBB
+    STATE_RECEIVING,        // 接收数据中
+    STATE_WAIT_END2         // 等待帧尾第2字节 0x0A
+} PARSE_STATE;
+
+/*-------------------------------------------------
+* Function: interrupt ISR
+* Purpose:  Interrupt handler
+* Input:    None
+* Output:   None
 /*-------------------------------------------------
 * Function: interrupt ISR
 * Purpose:  Interrupt handler
@@ -62,43 +92,34 @@ const  	char*   abc="ABCD\r\n";
  --------------------------------------------------*/
 void interrupt ISR(void)
 {
-	if(URRXNE && RXNEF)       // Receive interrupt
-	{
-        //LED_TOGGLE;
-    	receivedata[mmm++] =URDATAL;
-
-        if(mmm>=20)
-        {
-        	mmm=0;
+    // ============================================================
+    // UART接收中断 - 环形缓冲区存储
+    // ============================================================
+    if(URRXNE && RXNEF)
+    {
+        unchar data = URDATAL;
+        unchar next_head = (head + 1) % RING_BUF_SIZE;
+        
+        // 如果缓冲区没满，存入数据
+        if(next_head != tail) {
+            ring_buf[head] = data;
+            head = next_head;
         }
+        // 如果满了，丢弃数据（或者可以选择覆盖最旧的数据）
+        
         NOP();
-	}
+    }
 
+    // ============================================================
     // TIM4定时器中断（1ms）- 用于按键扫描时间基准
+    // ============================================================
     if(T4UIE && T4UIF)
     {
         T4UIF = 1;              // 写1清除中断标志
         g_timer_ms++;           // 毫秒计数器递增（允许溢出）
-        
     }
-
-    //----------------------------
-  /*  if(TCEN && TCF)          // Transmit interrupt
-    {
-        TCF=1;       // Write 1 to clear 0
-
-    	if(i<5)
-        {
-    		URDATAL =toSend[i++];
-        }
-        else
-        {
-          i=0;
-        }
-		NOP();
-     }  */
-
 }
+
 /*-------------------------------------------------
 * Function: POWER_INITIAL
 * Purpose:  Power-on system initialization
@@ -270,6 +291,161 @@ void SendATCommand(const char* cmd)
     // Send \n (0x0A)
     SendByte(0x0A);
 }
+/*-------------------------------------------------
+* Function: Calculate_CRC
+* Purpose:  根据协议计算校验和 (Sum of Type, Len, Data)
+* Input:    len - msg_buffer的总长度
+* Output:   CRC值（低8位）
+* Note:     协议规定：除去起始(0xBB)和结束标志(CRC, 0x0D, 0x0A)，其余字节之和
+ --------------------------------------------------*/
+unchar Calculate_CRC(unchar len) 
+{
+    unsigned int sum = 0;
+    // msg_buffer[0] = 0xBB (帧头，不参与校验)
+    // msg_buffer[1] ~ msg_buffer[len-4] 参与校验
+    // msg_buffer[len-3] = CRC (校验位)
+    // msg_buffer[len-2] = 0x0D
+    // msg_buffer[len-1] = 0x0A
+    for(unchar k = 1; k < (len - 3); k++) {
+        sum += msg_buffer[k];
+    }
+    return (unchar)(sum & 0xFF);
+}
+
+/*-------------------------------------------------
+* Function: UART_Task
+* Purpose:  串口接收任务（固定帧匹配）
+* Input:    None
+* Output:   None
+* Note:     从环形缓冲区读取固定字节，匹配以下帧格式：
+*           控制帧（7字节）：BB 01 01 [CMD] [CRC] 0D 0A
+*           对码帧（8字节）：BB 02 02 [ID_H] [ID_L] [CRC] 0D 0A
+*
+*           说明：串口工具会自动在数据后添加0D 0A
+*           - 控制帧输入：BB 01 01 01 03  → 实际发送：BB 01 01 01 03 0D 0A
+*           - 对码帧输入：BB 02 02 12 34 4A → 实际发送：BB 02 02 12 34 4A 0D 0A
+ --------------------------------------------------*/
+void UART_Task(void)
+{
+    #define CMD_FRAME_LEN 7      // 控制帧长度7字节
+    #define PAIR_FRAME_LEN 8     // 对码帧长度8字节
+    unchar check_buf[8];         // 缓冲区按最大长度分配
+    unchar i;
+    unchar match;
+    unchar calculated_crc;
+    unchar min_len;              // 最小帧长度
+
+    // 预定义的3种固定命令帧（7字节）
+    const unchar CMD_FRAME_OPEN[CMD_FRAME_LEN]  = {0xBB, 0x01, 0x01, 0x01, 0x03, 0x0D, 0x0A};  // 开阀
+    const unchar CMD_FRAME_CLOSE[CMD_FRAME_LEN] = {0xBB, 0x01, 0x01, 0x02, 0x04, 0x0D, 0x0A};  // 关阀
+    const unchar CMD_FRAME_STOP[CMD_FRAME_LEN]  = {0xBB, 0x01, 0x01, 0x00, 0x02, 0x0D, 0x0A};  // 停止
+
+    // 根据模式确定最小帧长度
+    // 对码模式需要8字节，正常模式需要7字节
+    min_len = (current_mode == MODE_PAIRING) ? PAIR_FRAME_LEN : CMD_FRAME_LEN;
+
+    // 当缓冲区数据足够时
+    while((head - tail + RING_BUF_SIZE) % RING_BUF_SIZE >= min_len)
+    {
+        // 从环形缓冲区取出前7个字节
+        for(i = 0; i < CMD_FRAME_LEN; i++) {
+            check_buf[i] = ring_buf[(tail + i) % RING_BUF_SIZE];
+        }
+
+        // ============================================================
+        // 检查是否匹配开阀命令 (BB 01 01 01 03 0D 0A)
+        // ============================================================
+        match = 1;
+        for(i = 0; i < CMD_FRAME_LEN; i++) {
+            if(check_buf[i] != CMD_FRAME_OPEN[i]) {
+                match = 0;
+                break;
+            }
+        }
+        if(match) {
+            // 直接执行电机控制（已完整匹配固定帧，无需再次解析）
+            Duima_ControlMotor(CMD_OPEN);
+            g_frame_count++;
+            LED_TOGGLE; DelayMs(50); LED_TOGGLE;  // 成功闪灯确认
+            tail = (tail + CMD_FRAME_LEN) % RING_BUF_SIZE;
+            continue;  // 继续检查下一帧
+        }
+
+        // ============================================================
+        // 检查是否匹配关阀命令 (BB 01 01 02 04 0D 0A)
+        // ============================================================
+        match = 1;
+        for(i = 0; i < CMD_FRAME_LEN; i++) {
+            if(check_buf[i] != CMD_FRAME_CLOSE[i]) {
+                match = 0;
+                break;
+            }
+        }
+        if(match) {
+            // 直接执行电机控制
+            Duima_ControlMotor(CMD_CLOSE);
+            g_frame_count++;
+            LED_TOGGLE; DelayMs(50); LED_TOGGLE;
+            tail = (tail + CMD_FRAME_LEN) % RING_BUF_SIZE;
+            continue;
+        }
+
+        // ============================================================
+        // 检查是否匹配停止命令 (BB 01 01 00 02 0D 0A)
+        // ============================================================
+        match = 1;
+        for(i = 0; i < CMD_FRAME_LEN; i++) {
+            if(check_buf[i] != CMD_FRAME_STOP[i]) {
+                match = 0;
+                break;
+            }
+        }
+        if(match) {
+            // 直接执行电机控制
+            Duima_ControlMotor(CMD_STOP);
+            g_frame_count++;
+            LED_TOGGLE; DelayMs(50); LED_TOGGLE;
+            tail = (tail + CMD_FRAME_LEN) % RING_BUF_SIZE;
+            continue;
+        }
+
+        // ============================================================
+        // 检查是否为对码帧（只在对码模式下处理，8字节）
+        // 格式：BB 02 02 [ID_High] [ID_Low] [CRC] 0D 0A
+        // 注意：串口工具输入"BB 02 02 12 34 4A"会自动添加0D 0A
+        // ============================================================
+        if(current_mode == MODE_PAIRING)
+        {
+            // 读取第8字节（此时while条件已保证有8字节）
+            check_buf[7] = ring_buf[(tail + 7) % RING_BUF_SIZE];
+
+            // 检查帧头、Type、Len、帧尾
+            if(check_buf[0] == 0xBB &&
+               check_buf[1] == 0x02 &&  // Type = 0x02 (对码)
+               check_buf[2] == 0x02 &&  // Len = 0x02 (2字节ID)
+               check_buf[6] == 0x0D &&  // 帧尾第1字节
+               check_buf[7] == 0x0A)    // 帧尾第2字节
+            {
+                // 验证 CRC (Type + Len + Data[0] + Data[1])
+                calculated_crc = check_buf[1] + check_buf[2] + check_buf[3] + check_buf[4];
+
+                if((calculated_crc & 0xFF) == check_buf[5])
+                {
+                    // CRC 校验通过，调用对码处理函数
+                    Duima_ProcessReceivedData(check_buf, PAIR_FRAME_LEN);
+                    g_frame_count++;
+                    tail = (tail + PAIR_FRAME_LEN) % RING_BUF_SIZE;  // 移除8字节
+                    continue;
+                }
+            }
+        }
+
+        // ============================================================
+        // 不匹配任何命令，丢弃第一个字节，继续滑动窗口检查
+        // ============================================================
+        tail = (tail + 1) % RING_BUF_SIZE;
+    }
+}
 
 /*-------------------------------------------------
 * Function: CAT1_Init这个是一直唤醒模式的配置，后续要用周期睡眠模式
@@ -305,7 +481,7 @@ void CAT1_Init(void)
     DelayMs(50);
 
     // Set preamble length (0-6)
-    SendATCommand("AT+PB=3");
+    SendATCommand("AT+PB=2000");
     DelayMs(50);
 
     SendATCommand("AT+MODE=1"); // 开启周期休眠
@@ -381,36 +557,37 @@ void main(void)
     // 状态机变量
     MAIN_STATE sys_state = STATE_WAKE_INIT;
 
+//    Duima_ControlMotor(CMD_OPEN);
     while(1)
     {
         switch(sys_state)
         {
-            // ============================================================
+                        // ============================================================
             // 状态 0: 刚醒来，做准备工作
             // ============================================================
             case STATE_WAKE_INIT:
                 LED_ON;
                 g_timer_ms = 0;         // 重置计时器
-                mmm = 0;                // 清空串口缓冲
+
                 WAKE_UP;                // 唤醒 433 模块 (PC1=0)
                 sys_state = STATE_WORKING; // 马上进入工作状态
-                //sys_state=STATE_GO_SLEEP;//测试模式，直接进入休眠
                 break;
 
-            // ============================================================
+
+                        // ============================================================
             // 状态 1: 工作中 (5秒窗口)
             // ============================================================
             case STATE_WORKING:
-                // 1. 核心业务
-                Duima_MainLoop();       // 检测按键
+                // 1. 核心业务（按键检测等）
+                Duima_MainLoop();
 
-                // 2. 处理串口数据
-                if(mmm >= 2) {
-                    Duima_ProcessReceivedData((unsigned char*)receivedata, mmm);
-                    mmm = 0; 
-                }
+                // 2. 模块化调用串口解析任务（状态机）
+                UART_Task();
 
-                // 3. 检查是否该睡觉了
+                // 3. 限位开关检测（持续监测，到位自动停止）
+                Duima_CheckLimitSwitch();
+
+                // 4. 检查是否该睡觉了
                 if(current_mode == MODE_PAIRING)
                 {
                     // 对码模式：超时 10秒 退出
@@ -424,11 +601,14 @@ void main(void)
                 else
                 {
                     // 正常模式：超时 5秒 睡觉
-                    if(g_timer_ms >= 5000) {
+                    if(g_timer_ms >= 10000) {
+                        OPENS = 0;
+                        CLOSES = 0;
                         sys_state = STATE_GO_SLEEP; // 去睡觉
                     }
                 }
                 break;
+
 
             // ============================================================
             // 状态 2: 执行休眠
@@ -437,7 +617,7 @@ void main(void)
             for(unsigned char k=0; k<6; k++) 
                 {
                     LED_TOGGLE;     // 翻转灯的状态
-                    DelayMs(100);    // 延时 (慢闪)
+                    DelayMs(10);    // 延时 (慢闪)
                 }
                 Sys_EnterSleep();       // 调用封装好的休眠函数 (程序会停在这里睡觉)
                 

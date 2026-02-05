@@ -85,48 +85,38 @@ void Duima_StartPairing(void)
     // 关键点：此时我们变成了"顺风耳"，谁发数据(目标地址是65535)我们都能收到
     Duima_Configure433Address(DUIMA_BROADCAST_ID);
 
-    // 3. 清空串口接收计数，准备接数据
-    mmm = 0;
+    // 3. ⚠️ 关键修复：清空环形缓冲区，丢弃旧数据
+    head = 0;
+    tail = 0;
 
-    // 4. 重置对码超时计时器
+    // 4. 额外延迟，确保433模块完全切换到广播地址
+    DelayMs(200);
+
+    // 5. 重置对码超时计时器
     g_timer_ms = 0;
 }
 
 //==============================================================================
-// 处理接收数据：提取ID并锁定（2字节大端模式，无帧头）
+// 处理对码数据：提取ID并锁定（仅用于对码模式）
+// 对码帧：BB 02 02 [ID_High] [ID_Low] [CRC] 0D 0A（8字节）
+// 注意：串口工具输入"BB 02 02 12 34 4A"会自动添加0D 0A
 //==============================================================================
 void Duima_ProcessReceivedData(unsigned char *data, unsigned char len)
 {
-    // ============================================================
-    // 场景 A: 正常工作模式 (Normal)
-    // ============================================================
-    if(current_mode == MODE_NORMAL)
-    {
-        // 因为硬件 AT+ADR 已经过滤了，能唤醒MCU并进来的数据，
-        // 肯定是对面配对好的设备发来的。
-        // 直接处理控制指令即可
-        if(len > 0)
-        {
-            // 处理完可以闪一下灯表示收到
-            LED_TOGGLE; DelayMs(50); LED_TOGGLE;
-        }
-        return;
-    }
+    // 基本有效性检查
+    if(data == 0 || len < 7) return;
 
-    // ============================================================
-    // 场景 B: 对码模式 (Pairing) - 解析对方发来的ID
-    // 格式：2字节大端模式 data[0]=高位, data[1]=低位
-    // ============================================================
+    // 只在对码模式下处理（正常模式的控制帧已在UART_Task中直接处理）
     if(current_mode == MODE_PAIRING)
     {
-        // 只要收到的数据大于等于2个字节，我们就认为它是ID
-        if(len >= 2)
+        // 检查是否为对码帧 (Type=0x02, Len=0x02)
+        if(data[0] == 0xBB && data[1] == 0x02 && data[2] == 0x02)
         {
             unsigned int new_id = 0;
 
-            // 大端模式：data[0] 是高位，data[1] 是低位
-            // 例如接收 0x12, 0x34，ID就是 0x1234
-            new_id = data[0] * 256 + data[1];
+            // 从 data[3] 和 data[4] 提取 ID（大端模式）
+            // data[3] = 高字节, data[4] = 低字节
+            new_id = ((unsigned int)data[3] << 8) | data[4];
 
             // 过滤掉广播地址本身（防止把自己设成65535）
             if(new_id == 65535) return;
@@ -143,7 +133,7 @@ void Duima_ProcessReceivedData(unsigned char *data, unsigned char len)
 
             // 4. 成功提示（快闪3下）
             for(unsigned char k=0; k<6; k++) {
-                LED_TOGGLE; DelayMs(10);
+                LED_TOGGLE; DelayMs(100);
             }
             LED_OFF;
         }
@@ -340,7 +330,117 @@ unsigned int Duima_EEPROM_ReadID(unsigned char addr)
 void Duima_EEPROM_WriteID(unsigned int id, unsigned char addr)
 {
     // 写入2字节ID（大端模式）
-    
+
     Duima_EEPROM_WriteByte((unsigned char)(id >> 8), addr);      // 高位
     Duima_EEPROM_WriteByte((unsigned char)(id), addr+1);         // 低位
+}
+
+//==============================================================================
+// 电机控制函数：根据命令字节控制电机H桥驱动信号
+//==============================================================================
+void Duima_ControlMotor(unsigned char cmd)
+{
+    switch(cmd)
+    {
+        case CMD_OPEN:      // 0x01 - 正转（开阀）
+            OPENS = 1;
+            CLOSES = 0;
+            break;
+
+        case CMD_CLOSE:     // 0x02 - 反转（关阀）
+            OPENS = 0;
+            CLOSES = 1;
+            break;
+
+        case CMD_STOP:      // 0x00 - 停止
+            OPENS = 0;
+            CLOSES = 0;
+            break;
+
+        default:
+            // 未知指令，停止电机保护
+            OPENS = 0;
+            CLOSES = 0;
+            break;
+    }
+}
+
+//==============================================================================
+// 限位开关检测：当电机转到位时自动停止
+// 应在主循环中持续调用此函数
+// 限位开关：低电平有效（到位=0，未到位=1）
+//==============================================================================
+void Duima_CheckLimitSwitch(void)
+{
+    // 检测开到位（OPENP被拉低）
+    if(OPENP == 0)
+    {
+        // 如果电机正在正转，立即停止
+        if(OPENS == 1 && CLOSES == 0)
+        {
+            OPENS = 0;
+            CLOSES = 0;
+            LED_TOGGLE;  // 闪灯提示到位
+        }
+    }
+
+    // 检测关到位（CLOSEP被拉低）
+    if(CLOSEP == 0)
+    {
+        // 如果电机正在反转，立即停止
+        if(OPENS == 0 && CLOSES == 1)
+        {
+            OPENS = 0;
+            CLOSES = 0;
+            LED_TOGGLE;  // 闪灯提示到位
+        }
+    }
+}
+
+//==============================================================================
+// 执行控制指令：解析接收到的完整数据帧
+// 协议格式：[0xBB][Type][Len][Data...][CRC][0x0D][0x0A]
+//==============================================================================
+void Duima_ExecuteCommand(unsigned char *data, unsigned char len)
+{
+    // 数据帧有效性检查
+    if(data == 0 || len < 7) {
+        return; // 帧太短，无效
+    }
+
+    // 解析协议字段
+    // data[0] = 0xBB (帧头)
+    // data[1] = Type (命令类型)
+    // data[2] = Len (数据长度)
+    // data[3...] = Data (命令数据)
+    // data[len-3] = CRC
+    // data[len-2] = 0x0D
+    // data[len-1] = 0x0A
+
+    unsigned char cmd_type = data[1];
+    unsigned char data_len = data[2];
+
+    // ============================================================
+    // 命令类型判断
+    // ============================================================
+    switch(cmd_type)
+    {
+        case 0x01: // 电机控制指令
+            if(data_len >= 1) {
+                unsigned char motor_cmd = data[3]; // 第一个数据字节是控制指令
+                Duima_ControlMotor(motor_cmd);
+
+                // 成功执行后闪灯确认（可选）
+                LED_TOGGLE; DelayMs(50); LED_TOGGLE;
+            }
+            break;
+
+        case 0x02: // 查询状态指令（可选，预留）
+            // TODO: 可以返回当前电机状态和限位开关状态
+            break;
+
+        default:
+            // 未知命令类型，忽略
+            break;
+    }
 }
