@@ -166,10 +166,91 @@
 * **现象** ：从立创导出的封装是一个独立文件，想把它放进自己的主库里。
 * **解决** ：在 PCB Library 面板直接复制。
 * **详细步骤** ：
+* 打开立创导出的那个 `.PcbLib` 文件。
+* 点开右下角的 **PCB -> PCB Library** 面板。
+* 在列表里**右键**点击那个封装名字，选  **Copy** 。
+* 在左侧项目栏切换回你自己的主库（比如 `PCB1.PcbLib`）。
+* 在同样的 **PCB Library** 面板空白处，**右键**选  **Paste** 。
+* 按 **Ctrl + S** 保存。
 
-1. 打开立创导出的那个 `.PcbLib` 文件。
-2. 点开右下角的 **PCB -> PCB Library** 面板。
-3. 在列表里**右键**点击那个封装名字，选  **Copy** 。
-4. 在左侧项目栏切换回你自己的主库（比如 `PCB1.PcbLib`）。
-5. 在同样的 **PCB Library** 面板空白处，**右键**选  **Paste** 。
-6. 按 **Ctrl + S** 保存。
+## 3/10
+
+
+### 一、日常推送 / 拉取代码（核心流程）
+
+只要仓库已经关联了 SSH 地址，后续每次修改代码后，执行以下 3 步即可（和之前 HTTPS 方式几乎一样，只是不用输密码）：
+
+bash
+
+运行
+
+```
+# 1. 拉取远程最新代码（避免冲突，可选但推荐）
+git pull
+
+# 2. 添加所有修改的文件到暂存区
+git add .
+
+# 3. 提交变更（备注写清楚修改内容）
+git commit -m "修复XX问题 / 新增XX功能"
+
+# 4. 推送到 GitHub（无需输密码，SSH 自动验证）
+git push
+```
+
+### 二、给已有仓库切换 / 确认 SSH 地址（关键）
+
+如果是之前用 HTTPS 地址的仓库，需要先把远程地址换成 SSH 格式（只需要做一次）：
+
+bash
+
+运行
+
+```
+# 1. 查看当前远程仓库地址（确认是否是 SSH 格式）
+git remote -v
+
+# 2. 如果显示 https:// 开头，执行下面命令切换为 SSH 地址
+git remote set-url origin git@github.com:evil0knight/Internship.git
+# 替换规则：GitHub SSH 地址格式是 git@github.com:用户名/仓库名.git
+
+# 3. 再次查看，显示 git@github.com:... 就是切换成功了
+git remote -v
+```
+
+### 三、新建仓库时直接用 SSH（一劳永逸）
+
+以后在 GitHub 新建仓库后，复制「SSH 地址」而非 HTTPS 地址，本地克隆 / 关联时直接用：
+
+bash
+
+运行
+
+```
+# 克隆新建的 GitHub 仓库到本地（SSH 方式）
+git clone git@github.com:evil0knight/新仓库名.git
+
+# 进入克隆后的文件夹，直接开发、提交、推送即可，无需额外配置
+cd 新仓库名
+```
+
+### 四、验证 SSH 连接是否有效（出问题时排查）
+
+如果推送时提示 SSH 验证失败，先执行这个命令测试连接：
+
+bash
+
+运行
+
+```
+ssh -T git@github.com
+```
+
+* 成功：会提示 `Hi evil0knight! You've successfully authenticated...`
+* 失败：根据提示排查（比如密钥没加对、防火墙拦截等）
+
+### 五、常见问题处理
+
+1. **换设备 / 重装系统** ：在新设备上重新生成 SSH 密钥（重复之前的 `ssh-keygen` 步骤），并把新公钥添加到 GitHub 即可；
+2. **密钥失效 / 丢失** ：在 GitHub 「SSH and GPG keys」页面删除旧密钥，重新生成 + 添加新密钥；
+3. **多账号区分** ：如果有多个 GitHub 账号，可配置 `~/.ssh/config` 文件区分密钥（新手暂时不用管）。
