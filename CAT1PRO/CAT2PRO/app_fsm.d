@@ -1,0 +1,1 @@
+ app_fsm.d  app_fsm.p1:  App/app_fsm.c App/../Drivers/timer.h App/../Modules/radio.h App/app_fsm.h modules/radio.h App/../App/app_fsm.h App/../Modules/sleep_wake.h App/../Drivers/uart.h App/../Modules/led.h App/../Modules/key.h modules/led.h App/../Modules/motor.h

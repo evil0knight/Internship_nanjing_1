@@ -1,0 +1,1 @@
+ motor.d  motor.p1:  Modules/motor.c Modules/../Drivers/timer.h Modules/../App/app_fsm.h Modules/motor.h

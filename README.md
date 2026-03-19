@@ -219,7 +219,6 @@ git remote -v
 
 ### 三、新建仓库时直接用 SSH（一劳永逸）
 
-
 #### 第一步：初始化 Git 仓库（项目首次上传必做）
 
 在当前 Git Bash 终端执行，把本地文件夹变成 Git 可管理的仓库：
@@ -333,3 +332,76 @@ ssh -T git@github.com
 今天探测端的功能都完成了，不过用逻辑分析仪抓波发现，1527协议的延时不对，这个程序的原始例程最小的延时是10us，但是我这个要最小4us，这里要考虑到指令周期，包括寻址，调用函数之类的，非常精密，目前想法是把指令周期缩短，然后拿逻辑分析仪慢慢试，明天上网查查，问问师傅
 
 哎，电路，模电，数电，现在又要加一门微机原理，真是没时间学
+
+## 3/16
+
+之前用claudecode写的程序好不容易写完，有增加了新的要求，屎山太难维护了，AI也不会agent嵌入式的代码，还是要自己code，不能天天review屎山了
+
+那个泄露报警的项目软件架构是我最爱的中断加状态机，今天把433阀门那个项目拿表驱动法写一下
+
+作者：无际单片机
+链接：https://www.zhihu.com/question/455454057/answer/124127323438
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+
+**第一步：建表**
+
+定义状态和事件的枚举，再搞个状态转移表：
+
+```c
+// 状态和事件
+typedef enum { IDLE, RUNNING, ERROR } State;
+typedef enum { START, STOP, ERROR_EVENT } Event;
+
+// 表结构
+typedef struct {
+    State current;  // 当前状态
+    Event event;    // 触发事件
+    State next;     // 下一状态
+    void (*action)(void); // 执行的操作
+} Transition;
+
+// 状态转移表
+Transition transitions[] = {
+    {IDLE, START, RUNNING, start_running},
+    {RUNNING, STOP, IDLE, stop_running},
+    {RUNNING, ERROR_EVENT, ERROR, handle_error},
+    // 加新状态？在这加一行
+};
+```
+
+**第二步：查表+执行**
+
+写个函数，根据当前状态和事件查表，更新状态并干活：
+
+```c
+void process_event(Event event) {
+    int size = sizeof(transitions) / sizeof(Transition);
+    for (int i = 0; i < size; i++) {
+        if (transitions[i].current == current_state && transitions[i].event == event) {
+            current_state = transitions[i].next;
+            if (transitions[i].action) transitions[i].action();
+            return;
+        }
+    }
+    invalid_transition(); // 没找到就报个错
+}
+```
+
+https://zhuanlan.zhihu.com/p/28299062258，插个眼，这个软件架构也很好，用空试试
+
+## 3/18
+
+---
+
+AD13:导出BOM：
+
+Report---->**Bill of Materials** (物料清单)
+如果要导出单一的原理图的BOM---->
+
+* 在弹出窗口的左侧  **All Columns** （所有列）列表里，往下翻。
+* 找到 **Document Name** (或者  **Source** ) 这一项，把前面的 **勾点上** 。
+* 现在你会看到右侧表格里多了一列，显示零件属于哪个文件。
+* 点击表格里 `Document Name` 表头边上的 **小漏斗（过滤图标）** ，在下拉列表里只勾选你想导出的那张图纸。
+
+---

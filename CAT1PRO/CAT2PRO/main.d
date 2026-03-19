@@ -1,0 +1,1 @@
+ main.d  main.p1:  App/main.c App/../Drivers/timer.h App/../Modules/radio.h App/app_fsm.h App/../App/app_fsm.h App/../Drivers/uart.h App/../Modules/led.h App/../Modules/key.h App/../Modules/motor.h
