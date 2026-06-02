@@ -2675,7 +2675,7 @@ extern __bit __timeout;
 
 # 6 "App\../Drivers/timer.h"
 void DelayUs(unsigned char Time);
-void DelayMs(unsigned char Time);
+void DelayMs(unsigned int Time);
 
 void Timer_Init(void);
 void Timer_Reset(void);
@@ -2687,7 +2687,7 @@ void Timer_ISR(void);
 void led_fast_flashing(void);
 void led_slow_flashing(void);
 
-# 27 "App\../Drivers/uart.h"
+# 28 "App\../Drivers/uart.h"
 void UART_Init(void);
 void UART_ISR(void);
 void uart_EnterMode(void);
@@ -2697,6 +2697,7 @@ void UART_SendATCmd(const char *cmd);
 void UART_SendATCmd_ADR(unsigned int addr);
 void UART_SendConnect(void);
 void UART_SendValveStatus(unsigned char is_open);
+void UART_BatStatue(void);
 
 # 18 "App\../Modules/motor.h"
 typedef enum {

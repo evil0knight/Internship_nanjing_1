@@ -4211,7 +4211,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;SYSCFG.h: 158: extern __bit __powerdown;
 [; ;SYSCFG.h: 159: extern __bit __timeout;
 [; ;timer.h: 6: void DelayUs(unsigned char Time);
-[; ;timer.h: 7: void DelayMs(unsigned char Time);
+[; ;timer.h: 7: void DelayMs(unsigned int Time);
 [; ;timer.h: 9: void Timer_Init(void);
 [; ;timer.h: 10: void Timer_Reset(void);
 [; ;timer.h: 13: void Timer_ISR(void);
@@ -4296,14 +4296,14 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e :UE 239 ]
 }
 "30
-[v _DelayMs `(v ~T0 @X0 1 ef1`uc ]
+[v _DelayMs `(v ~T0 @X0 1 ef1`ui ]
 "31
 {
-[; ;timer.c: 30: void DelayMs(unsigned char Time)
+[; ;timer.c: 30: void DelayMs(unsigned int Time)
 [; ;timer.c: 31: {
 [e :U _DelayMs ]
 "30
-[v _Time `uc ~T0 @X0 1 r1 ]
+[v _Time `ui ~T0 @X0 1 r1 ]
 "31
 [f ]
 "32
@@ -4345,7 +4345,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 "33
 [e ++ _a -> -> 1 `i `uc ]
 [e :U 248 ]
-[e $ < -> _a `i -> _Time `i 245  ]
+[e $ < -> _a `ui _Time 245  ]
 [e :U 246 ]
 "39
 }

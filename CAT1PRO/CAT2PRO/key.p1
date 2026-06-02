@@ -4198,7 +4198,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;SYSCFG.h: 158: extern __bit __powerdown;
 [; ;SYSCFG.h: 159: extern __bit __timeout;
 [; ;timer.h: 6: void DelayUs(unsigned char Time);
-[; ;timer.h: 7: void DelayMs(unsigned char Time);
+[; ;timer.h: 7: void DelayMs(unsigned int Time);
 [; ;timer.h: 9: void Timer_Init(void);
 [; ;timer.h: 10: void Timer_Reset(void);
 [; ;timer.h: 13: void Timer_ISR(void);

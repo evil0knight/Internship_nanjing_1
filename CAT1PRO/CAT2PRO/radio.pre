@@ -2675,7 +2675,7 @@ void FSM_SendEvent(SystemEvent evt);
 
 # 6 "Modules\../Drivers/timer.h"
 void DelayUs(unsigned char Time);
-void DelayMs(unsigned char Time);
+void DelayMs(unsigned int Time);
 
 void Timer_Init(void);
 void Timer_Reset(void);
@@ -2687,7 +2687,7 @@ void Timer_ISR(void);
 void led_fast_flashing(void);
 void led_slow_flashing(void);
 
-# 27 "Modules\../Drivers/uart.h"
+# 28 "Modules\../Drivers/uart.h"
 void UART_Init(void);
 void UART_ISR(void);
 void uart_EnterMode(void);
@@ -2697,6 +2697,7 @@ void UART_SendATCmd(const char *cmd);
 void UART_SendATCmd_ADR(unsigned int addr);
 void UART_SendConnect(void);
 void UART_SendValveStatus(unsigned char is_open);
+void UART_BatStatue(void);
 
 # 24 "Modules\radio.h"
 void Radio_Init(void);
@@ -2711,7 +2712,7 @@ void Radio_IntInit(void);
 void Radio_Init(void)
 {
 
-UART_SendATCmd("AT+PWR=20");
+UART_SendATCmd("AT+PWR=29");
 DelayMs(50);
 
 
@@ -2723,7 +2724,7 @@ UART_SendATCmd("AT+FEQ=434000000");
 DelayMs(50);
 
 
-UART_SendATCmd("AT+SF=10");
+UART_SendATCmd("AT+SF=7");
 DelayMs(50);
 
 
@@ -2731,7 +2732,7 @@ UART_SendATCmd("AT+BW=9");
 DelayMs(50);
 
 
-UART_SendATCmd("AT+PB=2000");
+UART_SendATCmd("AT+PB=2500");
 DelayMs(50);
 
 UART_SendATCmd("AT+MODE=1");
@@ -2740,30 +2741,34 @@ DelayMs(50);
 UART_SendATCmd("AT+WT=2");
 DelayMs(50);
 
+UART_SendATCmd("AT+CR=1");
+DelayMs(50);
 
+UART_SendATCmd("AT+CRC=1");
 DelayMs(50);
 
 
 UART_SendATCmd("ATW");
 DelayMs(50);
 
-# 48
+# 51
 Radio_Wake();
 }
 
-# 55
+# 58
 void Radio_Sleep(void)
 {
 do { PC1 = 1; } while(0);
 }
 
-# 64
+# 67
 void Radio_Wake(void)
 {
 do { PC1 = 0; } while(0);
+DelayMs(50);
 }
 
-# 73
+# 77
 void Radio_SendATCmd(const char *cmd)
 {
 unsigned char i = 0;
@@ -2776,9 +2781,9 @@ UART_SendByte('\n');
 
 }
 
-# 90
+# 94
 void Radio_IntInit(void)
 {
 
-# 100
+# 104
 }

@@ -720,21 +720,25 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [v _Radio_Wake `(v ~T0 @X0 0 ef ]
 "10 App\../Drivers/timer.h
 [v _Timer_Reset `(v ~T0 @X0 0 ef ]
+"37 App\../Drivers/uart.h
+[v _UART_BatStatue `(v ~T0 @X0 0 ef ]
 "30 App\../Modules/motor.h
 [v _Motor_Stop `(v ~T0 @X0 0 ef ]
 "25 App\../Modules/radio.h
 [v _Radio_Sleep `(v ~T0 @X0 0 ef ]
 "11 App\../Modules/sleep_wake.h
 [v _Sys_EnterSleep `(v ~T0 @X0 0 ef ]
-"29 App\../Drivers/uart.h
+"30 App\../Drivers/uart.h
 [v _uart_EnterMode `(v ~T0 @X0 0 ef ]
 "34
+[v _UART_SendATCmd_ADR `(v ~T0 @X0 0 ef1`ui ]
+"35
 [v _UART_SendConnect `(v ~T0 @X0 0 ef ]
 "28 App\../Modules/motor.h
 [v _Motor_Open `(v ~T0 @X0 0 ef ]
 "29
 [v _Motor_Close `(v ~T0 @X0 0 ef ]
-"35 App\../Drivers/uart.h
+"36 App\../Drivers/uart.h
 [v _UART_SendValveStatus `(v ~T0 @X0 0 ef1`uc ]
 "11 App\../Modules/led.h
 [v _led_fast_flashing `(v ~T0 @X0 0 ef ]
@@ -4257,20 +4261,21 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;SYSCFG.h: 158: extern __bit __powerdown;
 [; ;SYSCFG.h: 159: extern __bit __timeout;
 [; ;timer.h: 6: void DelayUs(unsigned char Time);
-[; ;timer.h: 7: void DelayMs(unsigned char Time);
+[; ;timer.h: 7: void DelayMs(unsigned int Time);
 [; ;timer.h: 9: void Timer_Init(void);
 [; ;timer.h: 10: void Timer_Reset(void);
 [; ;timer.h: 13: void Timer_ISR(void);
 [; ;led.h: 11: void led_fast_flashing(void);
 [; ;led.h: 12: void led_slow_flashing(void);
-[; ;uart.h: 27: void UART_Init(void);
-[; ;uart.h: 28: void UART_ISR(void);
-[; ;uart.h: 29: void uart_EnterMode(void);
-[; ;uart.h: 31: void UART_SendByte(unsigned char data);
-[; ;uart.h: 32: void UART_SendATCmd(const char *cmd);
-[; ;uart.h: 33: void UART_SendATCmd_ADR(unsigned int addr);
-[; ;uart.h: 34: void UART_SendConnect(void);
-[; ;uart.h: 35: void UART_SendValveStatus(unsigned char is_open);
+[; ;uart.h: 28: void UART_Init(void);
+[; ;uart.h: 29: void UART_ISR(void);
+[; ;uart.h: 30: void uart_EnterMode(void);
+[; ;uart.h: 32: void UART_SendByte(unsigned char data);
+[; ;uart.h: 33: void UART_SendATCmd(const char *cmd);
+[; ;uart.h: 34: void UART_SendATCmd_ADR(unsigned int addr);
+[; ;uart.h: 35: void UART_SendConnect(void);
+[; ;uart.h: 36: void UART_SendValveStatus(unsigned char is_open);
+[; ;uart.h: 37: void UART_BatStatue(void);
 [; ;motor.h: 18: typedef enum {
 [; ;motor.h: 19: MOTOR_IDLE = 0,
 [; ;motor.h: 20: MOTOR_OPENING,
@@ -4316,12 +4321,13 @@ Version 3.2   GCC8 Compiled Intermediate Code
 "15
 [v _Do_WakeUp `(v ~T0 @X0 1 ef ]
 {
-[; ;app_fsm.c: 15: void Do_WakeUp() { Radio_Wake(); Timer_Reset(); PORTAbits.PA1 = 1; }
+[; ;app_fsm.c: 15: void Do_WakeUp() { Radio_Wake(); Timer_Reset(); PORTAbits.PA1 = 1; UART_BatStatue(); }
 [e :U _Do_WakeUp ]
 [f ]
 [e ( _Radio_Wake ..  ]
 [e ( _Timer_Reset ..  ]
 [e = . . _PORTAbits 1 1 -> -> 1 `i `uc ]
+[e ( _UART_BatStatue ..  ]
 [e :UE 239 ]
 }
 "16
@@ -4338,10 +4344,11 @@ Version 3.2   GCC8 Compiled Intermediate Code
 "17
 [v _Do_PairStart `(v ~T0 @X0 1 ef ]
 {
-[; ;app_fsm.c: 17: void Do_PairStart() { uart_EnterMode(); Timer_Reset(); }
+[; ;app_fsm.c: 17: void Do_PairStart() { uart_EnterMode(); UART_SendATCmd_ADR(65535);Timer_Reset(); }
 [e :U _Do_PairStart ]
 [f ]
 [e ( _uart_EnterMode ..  ]
+[e ( _UART_SendATCmd_ADR (1 -> -> 65535 `l `ui ]
 [e ( _Timer_Reset ..  ]
 [e :UE 241 ]
 }
@@ -4397,6 +4404,15 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e ( _led_fast_flashing ..  ]
 [e :UE 246 ]
 }
+"23
+[v _Do_PairTimeOut `(v ~T0 @X0 1 ef ]
+{
+[; ;app_fsm.c: 23: void Do_PairTimeOut(){ Timer_Reset();}
+[e :U _Do_PairTimeOut ]
+[f ]
+[e ( _Timer_Reset ..  ]
+[e :UE 247 ]
+}
 "25
 [v _sys_fsm `CS1 ~T0 @X0 -> 0 `x e ]
 [i _sys_fsm
@@ -4448,7 +4464,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 . `E1 2
 . `E7 2
 . `E1 1
--> -> 0 `i `*F23
+&U _Do_PairTimeOut
 ..
 :U ..
 "33
@@ -4473,7 +4489,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;app_fsm.c: 29: {ST_WORKING, EV_CMD_OPEN, ST_MOTOR_RUNNING, Do_MotorOpen},
 [; ;app_fsm.c: 30: {ST_WORKING, EV_CMD_CLOSE, ST_MOTOR_RUNNING, Do_MotorClose},
 [; ;app_fsm.c: 31: {ST_PAIRING, EV_PAIR_SUCCESS, ST_WORKING, Do_PairDone},
-[; ;app_fsm.c: 32: {ST_PAIRING, EV_TIMEOUT, ST_WORKING, 0},
+[; ;app_fsm.c: 32: {ST_PAIRING, EV_TIMEOUT, ST_WORKING, Do_PairTimeOut},
 [; ;app_fsm.c: 33: {ST_MOTOR_RUNNING, EV_TIMEOUT, ST_WORKING, Do_MotorStop},
 [; ;app_fsm.c: 34: {ST_MOTOR_RUNNING, EV_LIMIT_HIT, ST_WORKING, Do_MotorDone},
 [; ;app_fsm.c: 35: };
@@ -4489,7 +4505,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e = _g_system_evt _evt ]
 [; ;app_fsm.c: 41: }
 "41
-[e :UE 247 ]
+[e :UE 248 ]
 }
 "43
 [v _FSM_Process `(v ~T0 @X0 1 ef1`E7 ]
@@ -4500,48 +4516,48 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [f ]
 [; ;app_fsm.c: 44: if(evt == EV_NONE) return;
 "44
-[e $ ! == -> _evt `i -> . `E7 0 `i 249  ]
-[e $UE 248  ]
-[e :U 249 ]
+[e $ ! == -> _evt `i -> . `E7 0 `i 250  ]
+[e $UE 249  ]
+[e :U 250 ]
 [; ;app_fsm.c: 46: for(int i=0; i<(sizeof(sys_fsm)/sizeof(FSM_Table)); i++) {
 "46
 {
 [v _i `i ~T0 @X0 1 a ]
 [e = _i -> 0 `i ]
-[e $ < -> _i `ui / -> # _sys_fsm `ui -> # `S1 `ui 250  ]
-[e $U 251  ]
-[e :U 250 ]
+[e $ < -> _i `ui / -> # _sys_fsm `ui -> # `S1 `ui 251  ]
+[e $U 252  ]
+[e :U 251 ]
 {
 [; ;app_fsm.c: 47: if(sys_fsm[i].cur == g_current_state && sys_fsm[i].evt == evt) {
 "47
-[e $ ! && == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 0 `i -> _g_current_state `i == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 1 `i -> _evt `i 253  ]
+[e $ ! && == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 0 `i -> _g_current_state `i == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 1 `i -> _evt `i 254  ]
 {
 [; ;app_fsm.c: 48: if(sys_fsm[i].action) sys_fsm[i].action();
-[v F2562 `*F23 ~T0 @X0 1 t ]
+[v F2566 `*F23 ~T0 @X0 1 t ]
 "48
-[e $ ! != . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 3 -> -> 0 `i `C*F23 254  ]
+[e $ ! != . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 3 -> -> 0 `i `C*F23 255  ]
 [e ( *U . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 3 ..  ]
-[e :U 254 ]
+[e :U 255 ]
 [; ;app_fsm.c: 49: g_current_state = sys_fsm[i].next;
 "49
 [e = _g_current_state . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 2 ]
 [; ;app_fsm.c: 50: break;
 "50
-[e $U 251  ]
+[e $U 252  ]
 "51
 }
-[e :U 253 ]
+[e :U 254 ]
 "52
 }
 "46
 [e ++ _i -> 1 `i ]
-[e $ < -> _i `ui / -> # _sys_fsm `ui -> # `S1 `ui 250  ]
-[e :U 251 ]
+[e $ < -> _i `ui / -> # _sys_fsm `ui -> # `S1 `ui 251  ]
+[e :U 252 ]
 "52
 }
 [; ;app_fsm.c: 51: }
 [; ;app_fsm.c: 52: }
 [; ;app_fsm.c: 53: }
 "53
-[e :UE 248 ]
+[e :UE 249 ]
 }

@@ -27,7 +27,7 @@ void DelayUs(unsigned char Time)
 * Input:    Time - delay time in milliseconds
 * Output:   None
  -------------------------------------------------*/
-void DelayMs(unsigned char Time)
+void DelayMs(unsigned int Time)
 {
 	unsigned char a,b;
 	for(a=0;a<Time;a++)

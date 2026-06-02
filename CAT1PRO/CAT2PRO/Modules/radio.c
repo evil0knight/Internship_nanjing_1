@@ -7,7 +7,7 @@
 void Radio_Init(void)
 {
 #ifdef CONFIG_RADIO_ADDR_VIA_AT
-    UART_SendATCmd("AT+PWR=20");
+    UART_SendATCmd("AT+PWR=29");
     DelayMs(50);
 
     // Set UART baud rate 9600
@@ -19,7 +19,7 @@ void Radio_Init(void)
     DelayMs(50);
 
     // Set spreading factor (7-12, higher=longer range)
-    UART_SendATCmd("AT+SF=10");
+    UART_SendATCmd("AT+SF=7");
     DelayMs(50);
 
     // Set bandwidth (6-9, lower=longer range)
@@ -27,7 +27,7 @@ void Radio_Init(void)
     DelayMs(50);
 
     // Set preamble length (0-6)
-    UART_SendATCmd("AT+PB=2000");
+    UART_SendATCmd("AT+PB=2500");
     DelayMs(50);
 
     UART_SendATCmd("AT+MODE=1"); // 开启周期休眠
@@ -36,7 +36,10 @@ void Radio_Init(void)
     UART_SendATCmd("AT+WT=2");   // 唤醒周期2秒 (发送方的前导码PB必须>2秒)
     DelayMs(50);
 
-   //UART_SendATCmd_ADR(SELF_ADR);
+    UART_SendATCmd("AT+CR=1");
+    DelayMs(50); // 433模块保存参数需要时间
+
+    UART_SendATCmd("AT+CRC=1");
     DelayMs(50); // 433模块保存参数需要时间
 
     // Save all settings
@@ -64,6 +67,7 @@ void Radio_Sleep(void)
 void Radio_Wake(void)
 {
     RADIO_WAKE();
+    DelayMs(50);
 }
 
 /*-------------------------------------------------

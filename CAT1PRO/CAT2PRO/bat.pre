@@ -1,5 +1,5 @@
 
-# 1 "Modules\sleep_wake.c"
+# 1 "Modules\bat.c"
 
 # 26 "E:\FMDprogrammer\Compiler\data\include\fmd.h"
 extern const char __xc8_OPTIM_SPEED;
@@ -2638,41 +2638,6 @@ extern unsigned char __resetbits;
 extern __bit __powerdown;
 extern __bit __timeout;
 
-# 5 "Modules\../App/app_fsm.h"
-typedef enum {
-ST_SLEEP,
-ST_WORKING,
-ST_PAIRING,
-ST_MOTOR_RUNNING
-} SystemState;
-
-
-typedef enum {
-EV_NONE = 0,
-EV_WAKE,
-EV_TIMEOUT,
-EV_LONG_PRESS,
-EV_PAIR_SUCCESS,
-EV_PAIR_FAIL,
-EV_CMD_OPEN,
-EV_CMD_CLOSE,
-EV_LIMIT_HIT
-} SystemEvent;
-
-
-typedef struct {
-SystemState cur;
-SystemEvent evt;
-SystemState next;
-void (*action)(void);
-} FSM_Table;
-
-extern SystemState g_current_state;
-extern volatile SystemEvent g_system_evt;
-
-void FSM_Process(SystemEvent evt);
-void FSM_SendEvent(SystemEvent evt);
-
 # 6 "Modules\../Drivers/timer.h"
 void DelayUs(unsigned char Time);
 void DelayMs(unsigned int Time);
@@ -2683,75 +2648,45 @@ void Timer_Reset(void);
 
 void Timer_ISR(void);
 
-# 11 "Modules\led.h"
-void led_fast_flashing(void);
-void led_slow_flashing(void);
+# 10 "Modules\bat.h"
+unsigned char Check_Battery_3_Stages(void);
 
-# 28 "Modules\../Drivers/uart.h"
-void UART_Init(void);
-void UART_ISR(void);
-void uart_EnterMode(void);
-
-void UART_SendByte(unsigned char data);
-void UART_SendATCmd(const char *cmd);
-void UART_SendATCmd_ADR(unsigned int addr);
-void UART_SendConnect(void);
-void UART_SendValveStatus(unsigned char is_open);
-void UART_BatStatue(void);
-
-# 24 "Modules\radio.h"
-void Radio_Init(void);
-void Radio_Sleep(void);
-void Radio_Wake(void);
-void Radio_SendATCmd(const char *cmd);
+# 3 "Modules\bat.c"
+unsigned char Check_Battery_3_Stages() {
+unsigned char result = 0x03;
 
 
-void Radio_IntInit(void);
-
-# 10 "Modules\sleep_wake.h"
-void IO_INT_INITIAL(void);
-void Sys_EnterSleep(void);
-
-# 3 "Modules\sleep_wake.c"
-void IO_INT_INITIAL(void)
-{
-EPS0 = 0B00000000;
+BSREG = 3;
 
 
-EPS1 = 0B01000000;
 
-ITYPE0 = 0B00000000;
+LVDCON0 = 0x15;
 
-ITYPE1 = 0B10000000;
 
-EPIE0 = 0B10010000;
+DelayMs(20);
 
-INTCON = 0B11000000;
+if (LVDCON0 & 0x08) {
+
+
+
+LVDCON0 = 0x14;
+
+DelayMs(20);
+
+if (LVDCON0 & 0x08) {
+result = 0x01;
+} else {
+result = 0x02;
 }
-void Sys_EnterSleep(void)
-{
-
-PORTAbits.PA1 = 0;
-Radio_Sleep();
-DelayMs(50);
+} else {
+result = 0x03;
+}
 
 
+LVDCON0 &= ~0x10;
 
 
-IO_INT_INITIAL();
-EPIF0 = 0x90;
+BSREG = 0;
 
-GIE = 0;
-
-
-__nop(); __nop();__nop();__nop();
-asm("sleep");
-__nop(); __nop();__nop();__nop();
-
-
-Radio_Wake();
-EPIF0 = 0x90;
-INTCON = 0B11000000;
-
-FSM_SendEvent(EV_WAKE);
+return result;
 }

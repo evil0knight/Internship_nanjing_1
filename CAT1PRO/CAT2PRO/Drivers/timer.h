@@ -4,7 +4,7 @@
 #include "SYSCFG.h"
 
 void DelayUs(unsigned char Time);
-void DelayMs(unsigned char Time);
+void DelayMs(unsigned int Time);
 
 void Timer_Init(void);
 void Timer_Reset(void);

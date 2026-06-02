@@ -2675,7 +2675,7 @@ void FSM_SendEvent(SystemEvent evt);
 
 # 6 "Drivers\../Drivers/timer.h"
 void DelayUs(unsigned char Time);
-void DelayMs(unsigned char Time);
+void DelayMs(unsigned int Time);
 
 void Timer_Init(void);
 void Timer_Reset(void);
@@ -2687,7 +2687,7 @@ void Timer_ISR(void);
 void led_fast_flashing(void);
 void led_slow_flashing(void);
 
-# 27 "Drivers\uart.h"
+# 28 "Drivers\uart.h"
 void UART_Init(void);
 void UART_ISR(void);
 void uart_EnterMode(void);
@@ -2697,6 +2697,7 @@ void UART_SendATCmd(const char *cmd);
 void UART_SendATCmd_ADR(unsigned int addr);
 void UART_SendConnect(void);
 void UART_SendValveStatus(unsigned char is_open);
+void UART_BatStatue(void);
 
 # 24 "Drivers\../Modules/radio.h"
 void Radio_Init(void);
@@ -2707,7 +2708,10 @@ void Radio_SendATCmd(const char *cmd);
 
 void Radio_IntInit(void);
 
-# 9 "Drivers\uart.c"
+# 10 "Drivers\../Modules/bat.h"
+unsigned char Check_Battery_3_Stages(void);
+
+# 10 "Drivers\uart.c"
 typedef enum {
 WAIT_HDR,
 RX_SRC,
@@ -2722,12 +2726,12 @@ static unsigned char func_data_len(unsigned char func)
 switch(func) {
 case 0x01u: return 5;
 case 0x03u: return 2;
-case 0x04u: return 1;
+case 0x04u: return 2;
 default: return 0xFF;
 }
 }
 
-# 32
+# 33
 void UART_Init(void)
 {
 PCKEN |= 0B00100000;
@@ -2741,7 +2745,7 @@ AFP1 = 0;
 ODCON0 = 0B00000000;
 }
 
-# 52
+# 53
 void UART_ISR(void)
 {
 static ParserState ps = WAIT_HDR;
@@ -2751,7 +2755,7 @@ static unsigned char data_len = 0;
 
 if(URRXNE && RXNEF) {
 unsigned char b = URDATAL;
-
+if(b == 0xFF) { ps = WAIT_HDR; }
 switch(ps) {
 case WAIT_HDR:
 if(b == 0xFF) { ps = RX_SRC; }
@@ -2807,7 +2811,7 @@ break;
 }
 }
 
-# 120
+# 121
 static unsigned char uint_to_str(unsigned int val, char *buf)
 {
 char tmp[6] = {0};
@@ -2819,7 +2823,7 @@ buf[j] = '\0';
 return j;
 }
 
-# 134
+# 135
 void UART_SendByte(unsigned char data)
 {
 TXEF = 0;
@@ -2827,7 +2831,7 @@ URDATAL = data;
 while(!TCF) {}
 }
 
-# 145
+# 146
 void UART_SendATCmd(const char *cmd)
 {
 unsigned char j = 0;
@@ -2839,15 +2843,16 @@ UART_SendByte(0x0D);
 UART_SendByte(0x0A);
 }
 
-# 160
+# 161
 void UART_SendATCmd_ADR(unsigned int addr)
 {
 char buf[20] = "AT+ADR=";
 uint_to_str(addr, buf + 7);
 UART_SendATCmd(buf);
+DelayMs(50);
 }
 
-# 172
+# 174
 static void UART_SendFrame(unsigned char func, const unsigned char *data, unsigned char len)
 {
 unsigned char i;
@@ -2860,14 +2865,15 @@ UART_SendByte(data[i]);
 UART_SendByte(0xFE);
 }
 
-# 188
+# 193
 void UART_SendConnect(void)
 {
-unsigned char data[1] = {0x01};
-UART_SendFrame(0x04u, data, 1);
+unsigned char data[2] = {0x00, 0x00};
+UART_SendFrame(0x04u, data, 2);
+led_fast_flashing();
 }
 
-# 198
+# 208
 void UART_SendValveStatus(unsigned char is_open)
 {
 unsigned char data[2];
@@ -2876,9 +2882,18 @@ data[1] = is_open ? 0x01 : 0x00;
 UART_SendFrame(0x03u, data, 2);
 }
 
-# 209
+# 219
 void uart_EnterMode(void)
 {
 Radio_Wake();
 DelayMs(20);
+}
+
+void UART_BatStatue(void)
+{
+DelayMs(50);
+unsigned char data[2];
+data[0] = 0x00;
+data[1] = Check_Battery_3_Stages();
+UART_SendFrame(0x05u, data, 2);
 }

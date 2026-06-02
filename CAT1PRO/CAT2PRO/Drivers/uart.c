@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "../Modules/radio.h"  /* Radio_Wake */
+#include "../Modules/bat.h"
 
 /*-------------------------------------------------
  * 协议解析状态
@@ -58,7 +59,7 @@ void UART_ISR(void)
 
     if(URRXNE && RXNEF) {
         unsigned char b = URDATAL;
-
+        if(b == 0xFF) { ps = WAIT_HDR; }
         switch(ps) {
             case WAIT_HDR:
                 if(b == 0xFF) { ps = RX_SRC; }
@@ -162,6 +163,7 @@ void UART_SendATCmd_ADR(unsigned int addr)
     char buf[20] = "AT+ADR=";
     uint_to_str(addr, buf + 7);
     UART_SendATCmd(buf);
+    DelayMs(50);
 }
 
 /*-------------------------------------------------
@@ -192,6 +194,7 @@ void UART_SendConnect(void)
 {
     unsigned char data[2] = {0x00, 0x00};
     UART_SendFrame(FUNC_CONNECT, data, 2);
+    led_fast_flashing();
 }
 
 /*-------------------------------------------------
@@ -217,4 +220,13 @@ void uart_EnterMode(void)
 {
     Radio_Wake();
     DelayMs(20);
+}
+
+void UART_BatStatue(void)
+{
+    DelayMs(50);
+    unsigned char data[2];
+    data[0] = 0x00;
+    data[1] = Check_Battery_3_Stages(); 
+    UART_SendFrame(FUNC_BATTERY, data, 2);
 }

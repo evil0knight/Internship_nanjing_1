@@ -711,7 +711,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [u S235 `S236 1 `S237 1 ]
 [n S235 . . . ]
 "7 Modules\../Drivers/timer.h
-[v _DelayMs `(v ~T0 @X0 0 ef1`uc ]
+[v _DelayMs `(v ~T0 @X0 0 ef1`ui ]
 [; ;fmd.h: 26: extern const char __xc8_OPTIM_SPEED;
 [; ;fmd.h: 28: extern double __fpnormalize(double);
 [; ;gcc8debug.h: 14: extern void __builtin_software_breakpoint(void);
@@ -4200,7 +4200,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;SYSCFG.h: 158: extern __bit __powerdown;
 [; ;SYSCFG.h: 159: extern __bit __timeout;
 [; ;timer.h: 6: void DelayUs(unsigned char Time);
-[; ;timer.h: 7: void DelayMs(unsigned char Time);
+[; ;timer.h: 7: void DelayMs(unsigned int Time);
 [; ;timer.h: 9: void Timer_Init(void);
 [; ;timer.h: 10: void Timer_Reset(void);
 [; ;timer.h: 13: void Timer_ISR(void);
@@ -4233,7 +4233,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e = . . _PORTAbits 1 1 -> ? == -> . . _PORTAbits 1 1 `i -> 1 `i : -> 0 `i -> 1 `i `uc ]
 [; ;led.c: 9: DelayMs(50);
 "9
-[e ( _DelayMs (1 -> -> 50 `i `uc ]
+[e ( _DelayMs (1 -> -> 50 `i `ui ]
 "10
 }
 "6
@@ -4274,7 +4274,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e = . . _PORTAbits 1 1 -> ? == -> . . _PORTAbits 1 1 `i -> 1 `i : -> 0 `i -> 1 `i `uc ]
 [; ;led.c: 19: DelayMs(100);
 "19
-[e ( _DelayMs (1 -> -> 100 `i `uc ]
+[e ( _DelayMs (1 -> -> 100 `i `ui ]
 "20
 }
 "16
