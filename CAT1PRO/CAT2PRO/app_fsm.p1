@@ -4355,10 +4355,12 @@ Version 3.2   GCC8 Compiled Intermediate Code
 "18
 [v _Do_PairDone `(v ~T0 @X0 1 ef ]
 {
-[; ;app_fsm.c: 18: void Do_PairDone() { UART_SendConnect(); }
+[; ;app_fsm.c: 18: void Do_PairDone() { UART_SendConnect(); Timer_Reset();PORTAbits.PA1 = 1;}
 [e :U _Do_PairDone ]
 [f ]
 [e ( _UART_SendConnect ..  ]
+[e ( _Timer_Reset ..  ]
+[e = . . _PORTAbits 1 1 -> -> 1 `i `uc ]
 [e :UE 242 ]
 }
 "19
@@ -4461,20 +4463,27 @@ Version 3.2   GCC8 Compiled Intermediate Code
 ..
 :U ..
 "32
+. `E1 1
+. `E7 4
+. `E1 1
+&U _Do_PairDone
+..
+:U ..
+"33
 . `E1 2
 . `E7 2
 . `E1 1
 &U _Do_PairTimeOut
 ..
 :U ..
-"33
+"34
 . `E1 3
 . `E7 2
 . `E1 1
 &U _Do_MotorStop
 ..
 :U ..
-"34
+"35
 . `E1 3
 . `E7 8
 . `E1 1
@@ -4489,38 +4498,39 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [; ;app_fsm.c: 29: {ST_WORKING, EV_CMD_OPEN, ST_MOTOR_RUNNING, Do_MotorOpen},
 [; ;app_fsm.c: 30: {ST_WORKING, EV_CMD_CLOSE, ST_MOTOR_RUNNING, Do_MotorClose},
 [; ;app_fsm.c: 31: {ST_PAIRING, EV_PAIR_SUCCESS, ST_WORKING, Do_PairDone},
-[; ;app_fsm.c: 32: {ST_PAIRING, EV_TIMEOUT, ST_WORKING, Do_PairTimeOut},
-[; ;app_fsm.c: 33: {ST_MOTOR_RUNNING, EV_TIMEOUT, ST_WORKING, Do_MotorStop},
-[; ;app_fsm.c: 34: {ST_MOTOR_RUNNING, EV_LIMIT_HIT, ST_WORKING, Do_MotorDone},
-[; ;app_fsm.c: 35: };
-"39
+[; ;app_fsm.c: 32: {ST_WORKING, EV_PAIR_SUCCESS, ST_WORKING, Do_PairDone},
+[; ;app_fsm.c: 33: {ST_PAIRING, EV_TIMEOUT, ST_WORKING, Do_PairTimeOut},
+[; ;app_fsm.c: 34: {ST_MOTOR_RUNNING, EV_TIMEOUT, ST_WORKING, Do_MotorStop},
+[; ;app_fsm.c: 35: {ST_MOTOR_RUNNING, EV_LIMIT_HIT, ST_WORKING, Do_MotorDone},
+[; ;app_fsm.c: 36: };
+"40
 [v _FSM_SendEvent `(v ~T0 @X0 1 ef1`E7 ]
 {
-[; ;app_fsm.c: 39: void FSM_SendEvent(SystemEvent evt) {
+[; ;app_fsm.c: 40: void FSM_SendEvent(SystemEvent evt) {
 [e :U _FSM_SendEvent ]
 [v _evt `E7 ~T0 @X0 1 r1 ]
 [f ]
-[; ;app_fsm.c: 40: g_system_evt = evt;
-"40
-[e = _g_system_evt _evt ]
-[; ;app_fsm.c: 41: }
+[; ;app_fsm.c: 41: g_system_evt = evt;
 "41
+[e = _g_system_evt _evt ]
+[; ;app_fsm.c: 42: }
+"42
 [e :UE 248 ]
 }
-"43
+"44
 [v _FSM_Process `(v ~T0 @X0 1 ef1`E7 ]
 {
-[; ;app_fsm.c: 43: void FSM_Process(SystemEvent evt) {
+[; ;app_fsm.c: 44: void FSM_Process(SystemEvent evt) {
 [e :U _FSM_Process ]
 [v _evt `E7 ~T0 @X0 1 r1 ]
 [f ]
-[; ;app_fsm.c: 44: if(evt == EV_NONE) return;
-"44
+[; ;app_fsm.c: 45: if(evt == EV_NONE) return;
+"45
 [e $ ! == -> _evt `i -> . `E7 0 `i 250  ]
 [e $UE 249  ]
 [e :U 250 ]
-[; ;app_fsm.c: 46: for(int i=0; i<(sizeof(sys_fsm)/sizeof(FSM_Table)); i++) {
-"46
+[; ;app_fsm.c: 47: for(int i=0; i<(sizeof(sys_fsm)/sizeof(FSM_Table)); i++) {
+"47
 {
 [v _i `i ~T0 @X0 1 a ]
 [e = _i -> 0 `i ]
@@ -4528,36 +4538,36 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e $U 252  ]
 [e :U 251 ]
 {
-[; ;app_fsm.c: 47: if(sys_fsm[i].cur == g_current_state && sys_fsm[i].evt == evt) {
-"47
+[; ;app_fsm.c: 48: if(sys_fsm[i].cur == g_current_state && sys_fsm[i].evt == evt) {
+"48
 [e $ ! && == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 0 `i -> _g_current_state `i == -> . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 1 `i -> _evt `i 254  ]
 {
-[; ;app_fsm.c: 48: if(sys_fsm[i].action) sys_fsm[i].action();
-[v F2566 `*F23 ~T0 @X0 1 t ]
-"48
+[; ;app_fsm.c: 49: if(sys_fsm[i].action) sys_fsm[i].action();
+[v F2567 `*F23 ~T0 @X0 1 t ]
+"49
 [e $ ! != . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 3 -> -> 0 `i `C*F23 255  ]
 [e ( *U . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 3 ..  ]
 [e :U 255 ]
-[; ;app_fsm.c: 49: g_current_state = sys_fsm[i].next;
-"49
-[e = _g_current_state . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 2 ]
-[; ;app_fsm.c: 50: break;
+[; ;app_fsm.c: 50: g_current_state = sys_fsm[i].next;
 "50
-[e $U 252  ]
+[e = _g_current_state . *U + &U _sys_fsm * -> -> _i `ui `ux -> -> # *U &U _sys_fsm `ui `ux 2 ]
+[; ;app_fsm.c: 51: break;
 "51
-}
-[e :U 254 ]
+[e $U 252  ]
 "52
 }
-"46
+[e :U 254 ]
+"53
+}
+"47
 [e ++ _i -> 1 `i ]
 [e $ < -> _i `ui / -> # _sys_fsm `ui -> # `S1 `ui 251  ]
 [e :U 252 ]
-"52
+"53
 }
-[; ;app_fsm.c: 51: }
 [; ;app_fsm.c: 52: }
 [; ;app_fsm.c: 53: }
-"53
+[; ;app_fsm.c: 54: }
+"54
 [e :UE 249 ]
 }

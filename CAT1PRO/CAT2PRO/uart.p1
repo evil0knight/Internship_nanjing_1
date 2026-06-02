@@ -718,7 +718,7 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [n E2447 . EV_NONE EV_WAKE EV_TIMEOUT EV_LONG_PRESS EV_PAIR_SUCCESS EV_PAIR_FAIL EV_CMD_OPEN EV_CMD_CLOSE EV_LIMIT_HIT  ]
 "37 Drivers\../App/app_fsm.h
 [v _FSM_SendEvent `(v ~T0 @X0 0 ef1`E2447 ]
-"97 Drivers\uart.c
+"101 Drivers\uart.c
 [c E2441 0 1 2 3 .. ]
 [n E2441 . ST_SLEEP ST_WORKING ST_PAIRING ST_MOTOR_RUNNING  ]
 "33 Drivers\../App/app_fsm.h
@@ -4522,69 +4522,86 @@ Version 3.2   GCC8 Compiled Intermediate Code
 [e $U 266  ]
 "97
 [e :U 262 ]
-[; ;uart.c: 97: else if(rx_buf[1] == 0x01u && g_current_state == ST_PAIRING) {
-[e $ ! && == -> *U + &U F2528 * -> -> -> 1 `i `ui `ux -> -> # *U &U F2528 `ui `ux `ui -> 1 `ui == -> _g_current_state `i -> . `E2441 2 `i 267  ]
+[; ;uart.c: 97: else if(rx_buf[1] == 0x04u) {
+[e $ ! == -> *U + &U F2528 * -> -> -> 1 `i `ui `ux -> -> # *U &U F2528 `ui `ux `ui -> 4 `ui 267  ]
 {
+[; ;uart.c: 98: if(rx_buf[2] == 0x00 && rx_buf[3] == 0x00)
+"98
+[e $ ! && == -> *U + &U F2528 * -> -> -> 2 `i `ui `ux -> -> # *U &U F2528 `ui `ux `i -> 0 `i == -> *U + &U F2528 * -> -> -> 3 `i `ui `ux -> -> # *U &U F2528 `ui `ux `i -> 0 `i 268  ]
+[; ;uart.c: 99: FSM_SendEvent(EV_PAIR_SUCCESS);
 "99
-[v _addr `ui ~T0 @X0 1 a ]
-[; ;uart.c: 99: unsigned int addr = 0;
-[e = _addr -> -> 0 `i `ui ]
+[e ( _FSM_SendEvent (1 . `E2447 4 ]
+[e :U 268 ]
 "100
-[v _i `uc ~T0 @X0 1 a ]
-[; ;uart.c: 100: unsigned char i;
-[; ;uart.c: 101: for(i = 0; i < 5; i++) {
+}
+[; ;uart.c: 100: }
+[e $U 269  ]
 "101
+[e :U 267 ]
+[; ;uart.c: 101: else if(rx_buf[1] == 0x01u && g_current_state == ST_PAIRING) {
+[e $ ! && == -> *U + &U F2528 * -> -> -> 1 `i `ui `ux -> -> # *U &U F2528 `ui `ux `ui -> 1 `ui == -> _g_current_state `i -> . `E2441 2 `i 270  ]
+{
+"103
+[v _addr `ui ~T0 @X0 1 a ]
+[; ;uart.c: 103: unsigned int addr = 0;
+[e = _addr -> -> 0 `i `ui ]
+"104
+[v _i `uc ~T0 @X0 1 a ]
+[; ;uart.c: 104: unsigned char i;
+[; ;uart.c: 105: for(i = 0; i < 5; i++) {
+"105
 {
 [e = _i -> -> 0 `i `uc ]
-[e $ < -> _i `i -> 5 `i 268  ]
-[e $U 269  ]
-[e :U 268 ]
+[e $ < -> _i `i -> 5 `i 271  ]
+[e $U 272  ]
+[e :U 271 ]
 {
-[; ;uart.c: 102: addr = addr * 10 + rx_buf[2 + i];
-"102
-[e = _addr + * _addr -> -> 10 `i `ui -> *U + &U F2528 * -> -> + -> 2 `i -> _i `i `ui `ux -> -> # *U &U F2528 `ui `ux `ui ]
-"103
-}
-"101
-[e ++ _i -> -> 1 `i `uc ]
-[e $ < -> _i `i -> 5 `i 268  ]
-[e :U 269 ]
-"103
-}
-[; ;uart.c: 103: }
-[; ;uart.c: 104: UART_SendATCmd_ADR(addr);
-"104
-[e ( _UART_SendATCmd_ADR (1 _addr ]
-[; ;uart.c: 105: FSM_SendEvent(EV_PAIR_SUCCESS);
-"105
-[e ( _FSM_SendEvent (1 . `E2447 4 ]
+[; ;uart.c: 106: addr = addr * 10 + rx_buf[2 + i];
 "106
-}
-[e :U 267 ]
+[e = _addr + * _addr -> -> 10 `i `ui -> *U + &U F2528 * -> -> + -> 2 `i -> _i `i `ui `ux -> -> # *U &U F2528 `ui `ux `ui ]
 "107
+}
+"105
+[e ++ _i -> -> 1 `i `uc ]
+[e $ < -> _i `i -> 5 `i 271  ]
+[e :U 272 ]
+"107
+}
+[; ;uart.c: 107: }
+[; ;uart.c: 108: UART_SendATCmd_ADR(addr);
+"108
+[e ( _UART_SendATCmd_ADR (1 _addr ]
+[; ;uart.c: 109: FSM_SendEvent(EV_PAIR_SUCCESS);
+"109
+[e ( _FSM_SendEvent (1 . `E2447 4 ]
+"110
+}
+[e :U 270 ]
+"111
+[e :U 269 ]
 [e :U 266 ]
 }
 [e :U 261 ]
-[; ;uart.c: 106: }
-[; ;uart.c: 107: }
-[; ;uart.c: 108: ps = WAIT_HDR;
-"108
-[e = F2527 . `E2516 0 ]
-[; ;uart.c: 109: break;
-"109
-[e $U 250  ]
-[; ;uart.c: 111: default:
-"111
-[e :U 271 ]
+[; ;uart.c: 110: }
+[; ;uart.c: 111: }
 [; ;uart.c: 112: ps = WAIT_HDR;
 "112
 [e = F2527 . `E2516 0 ]
 [; ;uart.c: 113: break;
 "113
 [e $U 250  ]
-"114
+[; ;uart.c: 115: default:
+"115
+[e :U 274 ]
+[; ;uart.c: 116: ps = WAIT_HDR;
+"116
+[e = F2527 . `E2516 0 ]
+[; ;uart.c: 117: break;
+"117
+[e $U 250  ]
+"118
 }
-[; ;uart.c: 114: }
+[; ;uart.c: 118: }
 [e $U 250  ]
 "63
 [e :U 251 ]
@@ -4593,170 +4610,170 @@ Version 3.2   GCC8 Compiled Intermediate Code
  , $ . `E2516 2 256
  , $ . `E2516 3 258
  , $ . `E2516 4 260
- 271 ]
-"114
+ 274 ]
+"118
 [e :U 250 ]
-"115
+"119
 }
 [e :U 248 ]
-[; ;uart.c: 115: }
-[; ;uart.c: 116: }
-"116
+[; ;uart.c: 119: }
+[; ;uart.c: 120: }
+"120
 [e :UE 247 ]
 }
-"121
+"125
 [v _uint_to_str `(uc ~T0 @X0 1 sf2`ui`*uc ]
-"122
+"126
 {
-[; ;uart.c: 121: static unsigned char uint_to_str(unsigned int val, char *buf)
-[; ;uart.c: 122: {
+[; ;uart.c: 125: static unsigned char uint_to_str(unsigned int val, char *buf)
+[; ;uart.c: 126: {
 [e :U _uint_to_str ]
-"121
+"125
 [v _val `ui ~T0 @X0 1 r1 ]
 [v _buf `*uc ~T0 @X0 1 r2 ]
-"122
+"126
 [f ]
 [v F2538 `uc ~T0 @X0 -> 6 `i s ]
 [i F2538
 :U ..
-"123
+"127
 -> -> 0 `i `uc
 ..
 ]
 [v _tmp `uc ~T0 @X0 -> 6 `i a ]
-[; ;uart.c: 123: char tmp[6] = {0};
+[; ;uart.c: 127: char tmp[6] = {0};
 [e = _tmp F2538 ]
-"124
+"128
 [v _i `uc ~T0 @X0 1 a ]
-[; ;uart.c: 124: unsigned char i = 0, j = 0;
+[; ;uart.c: 128: unsigned char i = 0, j = 0;
 [e = _i -> -> 0 `i `uc ]
 [v _j `uc ~T0 @X0 1 a ]
 [e = _j -> -> 0 `i `uc ]
-[; ;uart.c: 125: if(val == 0) { buf[0] = '0'; buf[1] = '\0'; return 1; }
-"125
-[e $ ! == _val -> -> 0 `i `ui 273  ]
+[; ;uart.c: 129: if(val == 0) { buf[0] = '0'; buf[1] = '\0'; return 1; }
+"129
+[e $ ! == _val -> -> 0 `i `ui 276  ]
 {
 [e = *U + _buf * -> -> 0 `i `x -> -> # *U _buf `i `x -> -> 48 `ui `uc ]
 [e = *U + _buf * -> -> 1 `i `x -> -> # *U _buf `i `x -> -> 0 `ui `uc ]
 [e ) -> -> 1 `i `uc ]
-[e $UE 272  ]
+[e $UE 275  ]
 }
-[e :U 273 ]
-[; ;uart.c: 126: while(val > 0) { tmp[i++] = '0' + (val % 10); val /= 10; }
-"126
-[e $U 274  ]
-[e :U 275 ]
+[e :U 276 ]
+[; ;uart.c: 130: while(val > 0) { tmp[i++] = '0' + (val % 10); val /= 10; }
+"130
+[e $U 277  ]
+[e :U 278 ]
 {
 [e = *U + &U _tmp * -> ++ _i -> -> 1 `i `uc `ux -> -> # *U &U _tmp `ui `ux -> + -> 48 `ui % _val -> -> 10 `i `ui `uc ]
 [e =/ _val -> -> 10 `uc `ui ]
 }
-[e :U 274 ]
-[e $ > _val -> -> 0 `i `ui 275  ]
-[e :U 276 ]
-[; ;uart.c: 127: while(i > 0) { buf[j++] = tmp[--i]; }
-"127
-[e $U 277  ]
-[e :U 278 ]
+[e :U 277 ]
+[e $ > _val -> -> 0 `i `ui 278  ]
+[e :U 279 ]
+[; ;uart.c: 131: while(i > 0) { buf[j++] = tmp[--i]; }
+"131
+[e $U 280  ]
+[e :U 281 ]
 {
 [e = *U + _buf * -> ++ _j -> -> 1 `i `uc `ux -> -> # *U _buf `ui `ux *U + &U _tmp * -> =- _i -> -> 1 `i `uc `ux -> -> # *U &U _tmp `ui `ux ]
 }
-[e :U 277 ]
-[e $ > -> _i `i -> 0 `i 278  ]
-[e :U 279 ]
-[; ;uart.c: 128: buf[j] = '\0';
-"128
-[e = *U + _buf * -> _j `ux -> -> # *U _buf `ui `ux -> -> 0 `ui `uc ]
-[; ;uart.c: 129: return j;
-"129
-[e ) _j ]
-[e $UE 272  ]
-[; ;uart.c: 130: }
-"130
-[e :UE 272 ]
-}
-"135
-[v _UART_SendByte `(v ~T0 @X0 1 ef1`uc ]
-"136
-{
-[; ;uart.c: 135: void UART_SendByte(unsigned char data)
-[; ;uart.c: 136: {
-[e :U _UART_SendByte ]
-"135
-[v _data `uc ~T0 @X0 1 r1 ]
-"136
-[f ]
-[; ;uart.c: 137: TXEF = 0;
-"137
-[e = _TXEF -> -> 0 `i `b ]
-[; ;uart.c: 138: URDATAL = data;
-"138
-[e = _URDATAL _data ]
-[; ;uart.c: 139: while(!TCF) {}
-"139
-[e $U 281  ]
+[e :U 280 ]
+[e $ > -> _i `i -> 0 `i 281  ]
 [e :U 282 ]
-{
+[; ;uart.c: 132: buf[j] = '\0';
+"132
+[e = *U + _buf * -> _j `ux -> -> # *U _buf `ui `ux -> -> 0 `ui `uc ]
+[; ;uart.c: 133: return j;
+"133
+[e ) _j ]
+[e $UE 275  ]
+[; ;uart.c: 134: }
+"134
+[e :UE 275 ]
 }
-[e :U 281 ]
-[e $ ! _TCF 282  ]
-[e :U 283 ]
-[; ;uart.c: 140: }
+"139
+[v _UART_SendByte `(v ~T0 @X0 1 ef1`uc ]
 "140
-[e :UE 280 ]
-}
-"146
-[v _UART_SendATCmd `(v ~T0 @X0 1 ef1`*Cuc ]
-"147
 {
-[; ;uart.c: 146: void UART_SendATCmd(const char *cmd)
-[; ;uart.c: 147: {
-[e :U _UART_SendATCmd ]
-"146
-[v _cmd `*Cuc ~T0 @X0 1 r1 ]
-"147
+[; ;uart.c: 139: void UART_SendByte(unsigned char data)
+[; ;uart.c: 140: {
+[e :U _UART_SendByte ]
+"139
+[v _data `uc ~T0 @X0 1 r1 ]
+"140
 [f ]
-"148
-[v _j `uc ~T0 @X0 1 a ]
-[; ;uart.c: 148: unsigned char j = 0;
-[e = _j -> -> 0 `i `uc ]
-[; ;uart.c: 149: while(cmd[j] != '\0') {
-"149
-[e $U 285  ]
-[e :U 286 ]
-{
-[; ;uart.c: 150: UART_SendByte(cmd[j]);
-"150
-[e ( _UART_SendByte (1 *U + _cmd * -> _j `ux -> -> # *U _cmd `ui `ux ]
-[; ;uart.c: 151: j++;
-"151
-[e ++ _j -> -> 1 `i `uc ]
-"152
-}
+[; ;uart.c: 141: TXEF = 0;
+"141
+[e = _TXEF -> -> 0 `i `b ]
+[; ;uart.c: 142: URDATAL = data;
+"142
+[e = _URDATAL _data ]
+[; ;uart.c: 143: while(!TCF) {}
+"143
+[e $U 284  ]
 [e :U 285 ]
-"149
-[e $ != -> *U + _cmd * -> _j `ux -> -> # *U _cmd `ui `ux `ui -> 0 `ui 286  ]
-[e :U 287 ]
-[; ;uart.c: 152: }
-[; ;uart.c: 153: UART_SendByte(0x0D);
-"153
-[e ( _UART_SendByte (1 -> -> 13 `i `uc ]
-[; ;uart.c: 154: UART_SendByte(0x0A);
-"154
-[e ( _UART_SendByte (1 -> -> 10 `i `uc ]
-[; ;uart.c: 155: }
-"155
-[e :UE 284 ]
-}
-"161
-[v _UART_SendATCmd_ADR `(v ~T0 @X0 1 ef1`ui ]
-"162
 {
-[; ;uart.c: 161: void UART_SendATCmd_ADR(unsigned int addr)
-[; ;uart.c: 162: {
+}
+[e :U 284 ]
+[e $ ! _TCF 285  ]
+[e :U 286 ]
+[; ;uart.c: 144: }
+"144
+[e :UE 283 ]
+}
+"150
+[v _UART_SendATCmd `(v ~T0 @X0 1 ef1`*Cuc ]
+"151
+{
+[; ;uart.c: 150: void UART_SendATCmd(const char *cmd)
+[; ;uart.c: 151: {
+[e :U _UART_SendATCmd ]
+"150
+[v _cmd `*Cuc ~T0 @X0 1 r1 ]
+"151
+[f ]
+"152
+[v _j `uc ~T0 @X0 1 a ]
+[; ;uart.c: 152: unsigned char j = 0;
+[e = _j -> -> 0 `i `uc ]
+[; ;uart.c: 153: while(cmd[j] != '\0') {
+"153
+[e $U 288  ]
+[e :U 289 ]
+{
+[; ;uart.c: 154: UART_SendByte(cmd[j]);
+"154
+[e ( _UART_SendByte (1 *U + _cmd * -> _j `ux -> -> # *U _cmd `ui `ux ]
+[; ;uart.c: 155: j++;
+"155
+[e ++ _j -> -> 1 `i `uc ]
+"156
+}
+[e :U 288 ]
+"153
+[e $ != -> *U + _cmd * -> _j `ux -> -> # *U _cmd `ui `ux `ui -> 0 `ui 289  ]
+[e :U 290 ]
+[; ;uart.c: 156: }
+[; ;uart.c: 157: UART_SendByte(0x0D);
+"157
+[e ( _UART_SendByte (1 -> -> 13 `i `uc ]
+[; ;uart.c: 158: UART_SendByte(0x0A);
+"158
+[e ( _UART_SendByte (1 -> -> 10 `i `uc ]
+[; ;uart.c: 159: }
+"159
+[e :UE 287 ]
+}
+"165
+[v _UART_SendATCmd_ADR `(v ~T0 @X0 1 ef1`ui ]
+"166
+{
+[; ;uart.c: 165: void UART_SendATCmd_ADR(unsigned int addr)
+[; ;uart.c: 166: {
 [e :U _UART_SendATCmd_ADR ]
-"161
+"165
 [v _addr `ui ~T0 @X0 1 r1 ]
-"162
+"166
 [f ]
 [v F2546 `uc ~T0 @X0 -> 20 `i s ]
 [i F2546
@@ -4771,173 +4788,173 @@ Version 3.2   GCC8 Compiled Intermediate Code
 -> 0 `c
 ..
 ]
-"163
-[v _buf `uc ~T0 @X0 -> 20 `i a ]
-[; ;uart.c: 163: char buf[20] = "AT+ADR=";
-[e = _buf F2546 ]
-[; ;uart.c: 164: uint_to_str(addr, buf + 7);
-"164
-[e ( _uint_to_str (2 , _addr + &U _buf * -> -> 7 `i `x -> -> # *U &U _buf `i `x ]
-[; ;uart.c: 165: UART_SendATCmd(buf);
-"165
-[e ( _UART_SendATCmd (1 -> &U _buf `*Cuc ]
-[; ;uart.c: 166: DelayMs(50);
-"166
-[e ( _DelayMs (1 -> -> 50 `i `ui ]
-[; ;uart.c: 167: }
 "167
-[e :UE 288 ]
+[v _buf `uc ~T0 @X0 -> 20 `i a ]
+[; ;uart.c: 167: char buf[20] = "AT+ADR=";
+[e = _buf F2546 ]
+[; ;uart.c: 168: uint_to_str(addr, buf + 7);
+"168
+[e ( _uint_to_str (2 , _addr + &U _buf * -> -> 7 `i `x -> -> # *U &U _buf `i `x ]
+[; ;uart.c: 169: UART_SendATCmd(buf);
+"169
+[e ( _UART_SendATCmd (1 -> &U _buf `*Cuc ]
+[; ;uart.c: 170: DelayMs(50);
+"170
+[e ( _DelayMs (1 -> -> 50 `i `ui ]
+[; ;uart.c: 171: }
+"171
+[e :UE 291 ]
 }
-"174
+"178
 [v _UART_SendFrame `(v ~T0 @X0 1 sf3`uc`*Cuc`uc ]
-"175
+"179
 {
-[; ;uart.c: 174: static void UART_SendFrame(unsigned char func, const unsigned char *data, unsigned char len)
-[; ;uart.c: 175: {
+[; ;uart.c: 178: static void UART_SendFrame(unsigned char func, const unsigned char *data, unsigned char len)
+[; ;uart.c: 179: {
 [e :U _UART_SendFrame ]
-"174
+"178
 [v _func `uc ~T0 @X0 1 r1 ]
 [v _data `*Cuc ~T0 @X0 1 r2 ]
 [v _len `uc ~T0 @X0 1 r3 ]
-"175
-[f ]
-"176
-[v _i `uc ~T0 @X0 1 a ]
-[; ;uart.c: 176: unsigned char i;
-[; ;uart.c: 177: UART_SendByte(0xFF);
-"177
-[e ( _UART_SendByte (1 -> -> 255 `i `uc ]
-[; ;uart.c: 178: UART_SendByte(0xACu);
-"178
-[e ( _UART_SendByte (1 -> -> 172 `ui `uc ]
-[; ;uart.c: 179: UART_SendByte(func);
 "179
-[e ( _UART_SendByte (1 _func ]
-[; ;uart.c: 180: for(i = 0; i < len; i++) {
+[f ]
 "180
+[v _i `uc ~T0 @X0 1 a ]
+[; ;uart.c: 180: unsigned char i;
+[; ;uart.c: 181: UART_SendByte(0xFF);
+"181
+[e ( _UART_SendByte (1 -> -> 255 `i `uc ]
+[; ;uart.c: 182: UART_SendByte(0xACu);
+"182
+[e ( _UART_SendByte (1 -> -> 172 `ui `uc ]
+[; ;uart.c: 183: UART_SendByte(func);
+"183
+[e ( _UART_SendByte (1 _func ]
+[; ;uart.c: 184: for(i = 0; i < len; i++) {
+"184
 {
 [e = _i -> -> 0 `i `uc ]
-[e $U 293  ]
-[e :U 290 ]
-{
-[; ;uart.c: 181: UART_SendByte(data[i]);
-"181
-[e ( _UART_SendByte (1 *U + _data * -> _i `ux -> -> # *U _data `ui `ux ]
-"182
-}
-"180
-[e ++ _i -> -> 1 `i `uc ]
+[e $U 296  ]
 [e :U 293 ]
-[e $ < -> _i `i -> _len `i 290  ]
-[e :U 291 ]
-"182
-}
-[; ;uart.c: 182: }
-[; ;uart.c: 183: UART_SendByte(0xFE);
-"183
-[e ( _UART_SendByte (1 -> -> 254 `i `uc ]
-[; ;uart.c: 184: }
-"184
-[e :UE 289 ]
-}
-"193
-[v _UART_SendConnect `(v ~T0 @X0 1 ef ]
-"194
 {
-[; ;uart.c: 193: void UART_SendConnect(void)
-[; ;uart.c: 194: {
+[; ;uart.c: 185: UART_SendByte(data[i]);
+"185
+[e ( _UART_SendByte (1 *U + _data * -> _i `ux -> -> # *U _data `ui `ux ]
+"186
+}
+"184
+[e ++ _i -> -> 1 `i `uc ]
+[e :U 296 ]
+[e $ < -> _i `i -> _len `i 293  ]
+[e :U 294 ]
+"186
+}
+[; ;uart.c: 186: }
+[; ;uart.c: 187: UART_SendByte(0xFE);
+"187
+[e ( _UART_SendByte (1 -> -> 254 `i `uc ]
+[; ;uart.c: 188: }
+"188
+[e :UE 292 ]
+}
+"197
+[v _UART_SendConnect `(v ~T0 @X0 1 ef ]
+"198
+{
+[; ;uart.c: 197: void UART_SendConnect(void)
+[; ;uart.c: 198: {
 [e :U _UART_SendConnect ]
 [f ]
 [v F2554 `uc ~T0 @X0 -> 2 `i s ]
 [i F2554
 :U ..
-"195
+"199
 -> -> 0 `i `uc
 -> -> 0 `i `uc
 ..
 ]
 [v _data `uc ~T0 @X0 -> 2 `i a ]
-[; ;uart.c: 195: unsigned char data[2] = {0x00, 0x00};
+[; ;uart.c: 199: unsigned char data[2] = {0x00, 0x00};
 [e = _data F2554 ]
-[; ;uart.c: 196: UART_SendFrame(0x04u, data, 2);
-"196
+[; ;uart.c: 200: UART_SendFrame(0x04u, data, 2);
+"200
 [e ( _UART_SendFrame (3 , , -> -> 4 `ui `uc -> &U _data `*Cuc -> -> 2 `i `uc ]
-[; ;uart.c: 197: led_fast_flashing();
-"197
+[; ;uart.c: 201: led_fast_flashing();
+"201
 [e ( _led_fast_flashing ..  ]
-[; ;uart.c: 198: }
-"198
-[e :UE 294 ]
+[; ;uart.c: 202: }
+"202
+[e :UE 297 ]
 }
-"208
-[v _UART_SendValveStatus `(v ~T0 @X0 1 ef1`uc ]
-"209
-{
-[; ;uart.c: 208: void UART_SendValveStatus(unsigned char is_open)
-[; ;uart.c: 209: {
-[e :U _UART_SendValveStatus ]
-"208
-[v _is_open `uc ~T0 @X0 1 r1 ]
-"209
-[f ]
-"210
-[v _data `uc ~T0 @X0 -> 2 `i a ]
-[; ;uart.c: 210: unsigned char data[2];
-[; ;uart.c: 211: data[0] = 0x00;
-"211
-[e = *U + &U _data * -> -> -> 0 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 0 `i `uc ]
-[; ;uart.c: 212: data[1] = is_open ? 0x01 : 0x00;
 "212
-[e = *U + &U _data * -> -> -> 1 `i `ui `ux -> -> # *U &U _data `ui `ux -> ? != -> _is_open `i -> -> -> 0 `i `uc `i : -> 1 `i -> 0 `i `uc ]
-[; ;uart.c: 213: UART_SendFrame(0x03u, data, 2);
+[v _UART_SendValveStatus `(v ~T0 @X0 1 ef1`uc ]
 "213
-[e ( _UART_SendFrame (3 , , -> -> 3 `ui `uc -> &U _data `*Cuc -> -> 2 `i `uc ]
-[; ;uart.c: 214: }
-"214
-[e :UE 295 ]
-}
-"219
-[v _uart_EnterMode `(v ~T0 @X0 1 ef ]
-"220
 {
-[; ;uart.c: 219: void uart_EnterMode(void)
-[; ;uart.c: 220: {
+[; ;uart.c: 212: void UART_SendValveStatus(unsigned char is_open)
+[; ;uart.c: 213: {
+[e :U _UART_SendValveStatus ]
+"212
+[v _is_open `uc ~T0 @X0 1 r1 ]
+"213
+[f ]
+"214
+[v _data `uc ~T0 @X0 -> 2 `i a ]
+[; ;uart.c: 214: unsigned char data[2];
+[; ;uart.c: 215: data[0] = 0x00;
+"215
+[e = *U + &U _data * -> -> -> 0 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 0 `i `uc ]
+[; ;uart.c: 216: data[1] = is_open ? 0x01 : 0x00;
+"216
+[e = *U + &U _data * -> -> -> 1 `i `ui `ux -> -> # *U &U _data `ui `ux -> ? != -> _is_open `i -> -> -> 0 `i `uc `i : -> 1 `i -> 0 `i `uc ]
+[; ;uart.c: 217: UART_SendFrame(0x03u, data, 2);
+"217
+[e ( _UART_SendFrame (3 , , -> -> 3 `ui `uc -> &U _data `*Cuc -> -> 2 `i `uc ]
+[; ;uart.c: 218: }
+"218
+[e :UE 298 ]
+}
+"223
+[v _uart_EnterMode `(v ~T0 @X0 1 ef ]
+"224
+{
+[; ;uart.c: 223: void uart_EnterMode(void)
+[; ;uart.c: 224: {
 [e :U _uart_EnterMode ]
 [f ]
-[; ;uart.c: 221: Radio_Wake();
-"221
-[e ( _Radio_Wake ..  ]
-[; ;uart.c: 222: DelayMs(20);
-"222
-[e ( _DelayMs (1 -> -> 20 `i `ui ]
-[; ;uart.c: 223: }
-"223
-[e :UE 296 ]
-}
+[; ;uart.c: 225: Radio_Wake();
 "225
-[v _UART_BatStatue `(v ~T0 @X0 1 ef ]
+[e ( _Radio_Wake ..  ]
+[; ;uart.c: 226: DelayMs(20);
 "226
+[e ( _DelayMs (1 -> -> 20 `i `ui ]
+[; ;uart.c: 227: }
+"227
+[e :UE 299 ]
+}
+"229
+[v _UART_BatStatue `(v ~T0 @X0 1 ef ]
+"230
 {
-[; ;uart.c: 225: void UART_BatStatue(void)
-[; ;uart.c: 226: {
+[; ;uart.c: 229: void UART_BatStatue(void)
+[; ;uart.c: 230: {
 [e :U _UART_BatStatue ]
 [f ]
-[; ;uart.c: 227: DelayMs(50);
-"227
-[e ( _DelayMs (1 -> -> 50 `i `ui ]
-"228
-[v _data `uc ~T0 @X0 -> 2 `i a ]
-[; ;uart.c: 228: unsigned char data[2];
-[; ;uart.c: 229: data[0] = 0x00;
-"229
-[e = *U + &U _data * -> -> -> 0 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 0 `i `uc ]
-[; ;uart.c: 230: data[1] = Check_Battery_3_Stages();
-"230
-[e = *U + &U _data * -> -> -> 1 `i `ui `ux -> -> # *U &U _data `ui `ux ( _Check_Battery_3_Stages ..  ]
-[; ;uart.c: 231: UART_SendFrame(0x05u, data, 2);
+[; ;uart.c: 231: DelayMs(50);
 "231
-[e ( _UART_SendFrame (3 , , -> -> 5 `ui `uc -> &U _data `*Cuc -> -> 2 `i `uc ]
-[; ;uart.c: 232: }
+[e ( _DelayMs (1 -> -> 50 `i `ui ]
 "232
-[e :UE 297 ]
+[v _data `uc ~T0 @X0 -> 2 `i a ]
+[; ;uart.c: 232: unsigned char data[2];
+[; ;uart.c: 233: data[0] = 0x00;
+"233
+[e = *U + &U _data * -> -> -> 0 `i `ui `ux -> -> # *U &U _data `ui `ux -> -> 0 `i `uc ]
+[; ;uart.c: 234: data[1] = Check_Battery_3_Stages();
+"234
+[e = *U + &U _data * -> -> -> 1 `i `ui `ux -> -> # *U &U _data `ui `ux ( _Check_Battery_3_Stages ..  ]
+[; ;uart.c: 235: UART_SendFrame(0x05u, data, 2);
+"235
+[e ( _UART_SendFrame (3 , , -> -> 5 `ui `uc -> &U _data `*Cuc -> -> 2 `i `uc ]
+[; ;uart.c: 236: }
+"236
+[e :UE 300 ]
 }

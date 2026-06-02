@@ -94,6 +94,10 @@ void UART_ISR(void)
                         else if(rx_buf[2] == 0x00 && rx_buf[3] == 0x00)
                             FSM_SendEvent(EV_CMD_CLOSE);
                     }
+                    else if(rx_buf[1] == FUNC_CONNECT) {
+                        if(rx_buf[2] == 0x00 && rx_buf[3] == 0x00)
+                            FSM_SendEvent(EV_PAIR_SUCCESS);
+                    }
                     else if(rx_buf[1] == FUNC_PAIR && g_current_state == ST_PAIRING) {
                         /* 5字节BCD → 16位地址，e.g.[0,1,2,3,4] → 01234 */
                         unsigned int addr = 0;

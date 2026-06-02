@@ -2790,6 +2790,10 @@ FSM_SendEvent(EV_CMD_OPEN);
 else if(rx_buf[2] == 0x00 && rx_buf[3] == 0x00)
 FSM_SendEvent(EV_CMD_CLOSE);
 }
+else if(rx_buf[1] == 0x04u) {
+if(rx_buf[2] == 0x00 && rx_buf[3] == 0x00)
+FSM_SendEvent(EV_PAIR_SUCCESS);
+}
 else if(rx_buf[1] == 0x01u && g_current_state == ST_PAIRING) {
 
 unsigned int addr = 0;
@@ -2811,7 +2815,7 @@ break;
 }
 }
 
-# 121
+# 125
 static unsigned char uint_to_str(unsigned int val, char *buf)
 {
 char tmp[6] = {0};
@@ -2823,7 +2827,7 @@ buf[j] = '\0';
 return j;
 }
 
-# 135
+# 139
 void UART_SendByte(unsigned char data)
 {
 TXEF = 0;
@@ -2831,7 +2835,7 @@ URDATAL = data;
 while(!TCF) {}
 }
 
-# 146
+# 150
 void UART_SendATCmd(const char *cmd)
 {
 unsigned char j = 0;
@@ -2843,7 +2847,7 @@ UART_SendByte(0x0D);
 UART_SendByte(0x0A);
 }
 
-# 161
+# 165
 void UART_SendATCmd_ADR(unsigned int addr)
 {
 char buf[20] = "AT+ADR=";
@@ -2852,7 +2856,7 @@ UART_SendATCmd(buf);
 DelayMs(50);
 }
 
-# 174
+# 178
 static void UART_SendFrame(unsigned char func, const unsigned char *data, unsigned char len)
 {
 unsigned char i;
@@ -2865,7 +2869,7 @@ UART_SendByte(data[i]);
 UART_SendByte(0xFE);
 }
 
-# 193
+# 197
 void UART_SendConnect(void)
 {
 unsigned char data[2] = {0x00, 0x00};
@@ -2873,7 +2877,7 @@ UART_SendFrame(0x04u, data, 2);
 led_fast_flashing();
 }
 
-# 208
+# 212
 void UART_SendValveStatus(unsigned char is_open)
 {
 unsigned char data[2];
@@ -2882,7 +2886,7 @@ data[1] = is_open ? 0x01 : 0x00;
 UART_SendFrame(0x03u, data, 2);
 }
 
-# 219
+# 223
 void uart_EnterMode(void)
 {
 Radio_Wake();
